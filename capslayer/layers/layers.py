@@ -37,6 +37,7 @@ def dense(inputs, activation,
           num_outputs,
           out_caps_dims,
           routing_method='EMRouting',
+          routing=3,
           coordinate_addition=False,
           reuse=None,
           name=None):
@@ -47,6 +48,7 @@ def dense(inputs, activation,
         activation: [batch_size, num_inputs] or [batch_size, in_height, in_width, in_channels]
         num_outputs: Integer, the number of output capsules in the layer.
         out_caps_dims: A list with two elements, pose shape of output capsules.
+        routing: Number of iterations during routing algorithm.
 
     Returns:
         pose: A 4-D tensor with shape [batch_size, num_outputs] + out_caps_dims
@@ -87,7 +89,7 @@ def dense(inputs, activation,
         else:
             raise TypeError("Wrong rank for inputs or activation")
 
-        pose, activation = routing(vote, activation, routing_method)
+        pose, activation = routing(vote, activation, routing_method, num_iter=routing)
         # pose, activation = cl.core.gluing(vote, activation)
         assert len(pose.shape) == 4
         assert len(activation.shape) == 2
