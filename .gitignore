@@ -8,3 +8,6 @@ model*/data*
 model*/results*
 *.pyc
 results*
+build/
+data/
+.vscode

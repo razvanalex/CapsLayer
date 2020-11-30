@@ -36,7 +36,7 @@ def conv2d(inputs,
            strides,
            padding="valid",
            routing_method="EMRouting",
-           routing=3,
+           routing_iter=3,
            name=None,
            reuse=None):
     """A 2D convolutional capsule layer.
@@ -50,6 +50,7 @@ def conv2d(inputs,
         strides: An integer or tuple/list of 2 integers, specifying the strides of the convolution along the height and width. Can be a single integer to specify the same value for all spatial dimensions.
         padding: One of "valid" or "same" (case-insensitive), now only support "valid".
         routing_method: One of "EMRouting" or "DynamicRouting", the method of routing-by-agreement algorithm.
+        routing_iter: Number of iterations during routing algorithm.
         name: A string, the name of the layer.
         reuse: Boolean, whether to reuse the weights of a previous layer by the same name.
 
@@ -103,7 +104,7 @@ def conv2d(inputs,
                             out_caps_dims=out_caps_dims)
 
         # 3. routing
-        pose, activation = routing(vote, activation, method=routing_method, num_iter=routing)
+        pose, activation = routing(vote, activation, method=routing_method, num_iter=routing_iter)
 
         return pose, activation
 
@@ -116,7 +117,7 @@ def conv3d(inputs,
            strides,
            padding="valid",
            routing_method="EMRouting",
-           routing=3,
+           routing_iter=3,
            name=None,
            reuse=None):
     """A 3D convolutional capsule layer.
@@ -130,7 +131,7 @@ def conv3d(inputs,
         strides: An integer or tuple/list of 3 integers, specifying the strides of the convolution along the height and width. Can be a single integer to specify the same value for all spatial dimensions.
         padding: One of "valid" or "same" (case-insensitive), now only support "valid".
         routing_method: One of "EMRouting" or "DynamicRouting", the method of routing-by-agreement algorithm.
-        routing: Number of iterations during routing algorithm.
+        routing_iter: Number of iterations during routing algorithm.
         name: String, a name for the operation (optional).
         reuse: Boolean, whether to reuse the weights of a previous layer by the same name.
 
@@ -178,7 +179,7 @@ def conv3d(inputs,
                             out_caps_dims=out_caps_dims)
 
         # 3. routing
-        pose, activation = routing(vote, activation, method=routing_method, num_iter=routing)
+        pose, activation = routing(vote, activation, method=routing_method, num_iter=routing_iter)
 
         return pose, activation
 
@@ -191,7 +192,7 @@ def conv1d(inputs,
            stride,
            padding="valid",
            routing_method="EMRouting",
-           routing=3,
+           routing_iter=3,
            name=None,
            reuse=None):
     """A 1D convolutional capsule layer (e.g. temporal convolution).
@@ -201,7 +202,7 @@ def conv1d(inputs,
         activation: A 3-D tensor with shape [batch_size, in_width, in_channels].
         kernel_size: An integer or tuple/list of a single integer, specifying the length of the 1D convolution window.
         stride: An integer or tuple/list of a single integer, specifying the stride length of the convolution.
-        routing: Number of iterations during routing algorithm.
+        routing_iter: Number of iterations during routing algorithm.
 
     Returns:
         pose: A 5-D tensor with shape [batch_size, out_width, out_channels] + out_caps_dims.
@@ -248,7 +249,7 @@ def conv1d(inputs,
                                   strides=strides,
                                   padding=padding,
                                   routing_method=routing_method,
-                                  routing=routing,
+                                  routing_iter=routing_iter,
                                   name="convolution",
                                   reuse=reuse)
         pose = tf.squeeze(pose, axis=1)
