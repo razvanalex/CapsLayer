@@ -20,11 +20,7 @@ from __future__ import print_function
 
 import os
 import numpy as np
-try:
-    import tensorflow.compat.v1 as tf
-    tf.disable_v2_behavior()
-except:
-    import tensorflow as tf
+import tensorflow as tf
 from tensorflow.python.keras.utils.data_utils import get_file
 from tensorflow.python.keras.datasets.cifar import load_batch
 
@@ -62,7 +58,7 @@ def load_cifar100(split, path=None):
 
 
 def encode_and_write(dataset, filename):
-    with tf.python_io.TFRecordWriter(filename) as writer:
+    with tf.io.TFRecordWriter(filename) as writer:
         for image, label in dataset:
             print(image.shape)
             exit()

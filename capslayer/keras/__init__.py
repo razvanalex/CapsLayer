@@ -17,9 +17,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from capslayer.core.routing import routing
-from capslayer.core.routing import Routing
-from capslayer.core.transformation import transforming
-from capslayer.core.transformation import Transforming
+from capslayer.keras.layers import PrimaryCapsule
+from capslayer.keras.layers import CapsuleConv1D
+from capslayer.keras.layers import CapsuleConv2D
+from capslayer.keras.layers import CapsuleConv3D
+from capslayer.keras.layers import CapsuleDense
 
-__all__ = ["routing", "Routing", "transforming", 'Transforming']
+__all__ = ['PrimaryCapsule', 'CapsuleConv1D', 'CapsuleConv2D', 'CapsuleConv3D', 'CapsuleDense']

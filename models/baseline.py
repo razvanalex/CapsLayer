@@ -19,11 +19,7 @@ from __future__ import print_function
 
 import numpy as np
 import capslayer as cl
-try:
-    import tensorflow.compat.v1 as tf
-    tf.disable_v2_behavior()
-except:
-    import tensorflow as tf
+import tensorflow as tf
 
 from config import cfg
 
@@ -37,39 +33,38 @@ class Model(object):
 
     def create_network(self, inputs, labels):
         self.labels = labels
+        self.inputs = inputs
         self.y = tf.one_hot(labels, depth=self.num_label, axis=-1, dtype=tf.float32)
         inputs = tf.reshape(inputs, shape=[-1, self.height, self.width, self.channels])
-        conv1 = tf.layers.conv2d(inputs, filters=256, kernel_size=5, activation=tf.nn.relu)
+        conv1 = tf.keras.layers.Conv2D(filters=256, kernel_size=5, activation=tf.nn.relu)(inputs)
         pool1 = tf.nn.max_pool(conv1, ksize=[1, 3, 3, 1], strides=[1, 1, 1, 1], padding="SAME")
 
-        conv2 = tf.layers.conv2d(pool1, filters=256, kernel_size=5, activation=tf.nn.relu)
+        conv2 = tf.keras.layers.Conv2D(filters=256, kernel_size=5, activation=tf.nn.relu)(pool1)
         pool2 = tf.nn.max_pool(conv2, ksize=[1, 3, 3, 1], strides=[1, 1, 1, 1], padding="SAME")
 
-        conv3 = tf.layers.conv2d(pool2, filters=128, kernel_size=5, activation=tf.nn.relu)
+        conv3 = tf.keras.layers.Conv2D(filters=128, kernel_size=5, activation=tf.nn.relu)(pool2)
         pool3 = tf.nn.max_pool(conv3, ksize=[1, 3, 3, 1], strides=[1, 1, 1, 1], padding="SAME")
 
-        input = tf.reshape(pool3, shape=(-1, np.prod(pool3.get_shape()[1:])))
-        fc1 = tf.layers.dense(input, units=328)
-        fc2 = tf.layers.dense(fc1, units=192)
-        out = tf.layers.dense(fc2, units=self.num_label, activation=None)
+        _input = tf.reshape(pool3, shape=(-1, np.prod(pool3.get_shape()[1:])))
+        fc1 = tf.keras.layers.Dense(units=328)(_input)
+        fc2 = tf.keras.layers.Dense(units=192)(fc1)
+        out = tf.keras.layers.Dense(units=self.num_label, activation=None)(fc2)
         self.y_pred = out
         self.probs = tf.nn.softmax(self.y_pred, axis=1)
 
-        with tf.variable_scope('accuracy'):
-            logits_idx = tf.to_int32(tf.argmax(self.probs, axis=1))
-            correct_prediction = tf.equal(tf.to_int32(self.labels), logits_idx)
+        with tf.name_scope('accuracy'):
+            logits_idx = tf.cast(tf.argmax(self.probs, axis=1), tf.int32)
+            correct_prediction = tf.equal(tf.cast(self.labels, tf.int32), logits_idx)
             correct = tf.reduce_sum(tf.cast(correct_prediction, tf.float32))
             self.accuracy = tf.reduce_mean(correct / tf.cast(tf.shape(self.probs)[0], tf.float32))
             cl.summary.scalar('accuracy', self.accuracy, verbose=cfg.summary_verbose)
 
     def _loss(self):
-        return tf.losses.softmax_cross_entropy(self.y, self.y_pred)
+        return tf.nn.sparse_softmax_cross_entropy_with_logits(self.y, self.y_pred)
 
-    def train(self, optimizer, num_gpus=1):
+    def train(self, num_gpus=1):
         self.global_step = tf.Variable(1, name='global_step', trainable=False)
-        total_loss = self._loss()
-        optimizer = tf.train.AdamOptimizer()
-        train_ops = optimizer.minimize(total_loss, global_step=self.global_step)
-        summary_ops = tf.summary.merge_all()
+        optimizer = tf.keras.optimizers.Adam()
+        train_ops = optimizer.minimize(self._loss, self.inputs)
 
-        return(total_loss, train_ops, summary_ops)
+        return (self._loss(), train_ops)

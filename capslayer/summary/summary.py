@@ -17,40 +17,45 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-try:
-    import tensorflow.compat.v1 as tf
-    tf.disable_v2_behavior()
-except:
-    import tensorflow as tf
+
+import tensorflow as tf
 
 
 def image(name,
           tensor,
+          step=None,
           verbose=True,
-          max_outputs=3,
-          collections=None,
-          family=None):
+          max_outputs=3):
     if verbose:
-        tf.summary.image(name, tensor, max_outputs, collections, family)
+        if step is not None:
+            tf.summary.image(name, tensor, step, max_outputs)
+        else:
+            tf.summary.image(name, tensor, max_outputs=max_outputs)
     else:
         pass
 
 
-def scalar(name, tensor, verbose=False, collections=None, family=None):
+def scalar(name, tensor, step=None, verbose=False):
     if verbose:
-        tf.summary.scalar(name, tensor, collections, family)
+        if step is not None:
+            tf.summary.scalar(name, tensor, step)
+        else:
+            tf.summary.scalar(name, tensor)
     else:
         pass
 
 
-def histogram(name, values, verbose=False, collections=None, family=None):
+def histogram(name, values, step=None, verbose=False):
     if verbose:
-        tf.summary.histogram(name, values, collections, family)
+        if step is not None:
+            tf.summary.histogram(name, values, step)
+        else:
+            tf.summary.histogram(name, values)
     else:
         pass
 
 
-def tensor_stats(name, tensor, verbose=True, collections=None, family=None):
+def tensor_stats(name, tensor, step=None, verbose=True):
     """
     Args:
         tensor: A non-scalar tensor.
@@ -58,13 +63,13 @@ def tensor_stats(name, tensor, verbose=True, collections=None, family=None):
     if verbose:
         with tf.name_scope(name):
             mean = tf.reduce_mean(tensor)
-            tf.summary.scalar('mean', mean, collections=collections, family=family)
+            tf.summary.scalar('mean', mean, step)
 
             with tf.name_scope('stddev'):
                 stddev = tf.sqrt(tf.reduce_mean(tf.square(tensor - mean)))
-            tf.summary.scalar('stddev', stddev, collections=collections, family=family)
-            tf.summary.scalar('max', tf.reduce_max(tensor), collections=collections, family=family)
-            tf.summary.scalar('min', tf.reduce_min(tensor), collections=collections, family=family)
-            tf.summary.histogram('histogram', tensor, collections=collections, family=family)
+            tf.summary.scalar('stddev', stddev, step)
+            tf.summary.scalar('max', tf.reduce_max(tensor), step)
+            tf.summary.scalar('min', tf.reduce_min(tensor), step)
+            tf.summary.histogram('histogram', tensor, step)
     else:
         pass

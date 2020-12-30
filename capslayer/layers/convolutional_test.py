@@ -19,17 +19,14 @@ from __future__ import print_function
 
 import numpy as np
 import capslayer as cl
-try:
-    import tensorflow.compat.v1 as tf
-    tf.disable_v2_behavior()
-except:
-    import tensorflow as tf
+import tensorflow as tf
 
 
 def testConv2d():
     shape = [1, 9, 9, 9, 1, 1]
-    input_tensor = tf.random_normal(shape=shape, stddev=5, seed=2018)
-    activation = tf.random_normal(shape=shape[:4], mean=0.5, stddev=0.5, seed=2018)
+    input_tensor = tf.random.normal(shape=shape, stddev=5, seed=2018)
+    activation = tf.random.normal(
+        shape=shape[:4], mean=0.5, stddev=0.5, seed=2018)
     activation = tf.clip_by_value(activation, 0., 0.999)
     conv_cl, activation = cl.layers.conv2d(input_tensor,
                                            activation,
@@ -38,19 +35,20 @@ def testConv2d():
                                            strides=1,
                                            out_caps_dims=[1, 1])
     input_tensor = tf.squeeze(input_tensor, axis=(-2, -1))
-    conv_tf = tf.layers.conv2d(input_tensor, filters=1, kernel_size=3, strides=1, use_bias=False)
+    conv_tf = tf.keras.layers.Conv2D(
+        filters=1, kernel_size=3, strides=1, use_bias=False)(input_tensor)
 
     return tf.squeeze(conv_cl, axis=(-2, -1)), conv_tf
 
 
 if __name__ == "__main__":
     conv_cl, conv_tf = testConv2d()
-    config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True
-    init = tf.global_variables_initializer()
-    sess = tf.Session(config=config)
-    sess.run(init)
-    conv_cl = sess.run(conv_cl)
-    conv_tf = sess.run(conv_tf)
+    # config = tf.ConfigProto()
+    # config.gpu_options.allow_growth = True
+    # init = tf.global_variables_initializer()
+    # sess = tf.Session(config=config)
+    # sess.run(init)
+    # conv_cl = sess.run(conv_cl)
+    # conv_tf = sess.run(conv_tf)
     print(conv_cl)
     # print(conv_tf)

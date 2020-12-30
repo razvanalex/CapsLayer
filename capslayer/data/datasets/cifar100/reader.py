@@ -25,11 +25,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-try:
-    import tensorflow.compat.v1 as tf
-    tf.disable_v2_behavior()
-except:
-    import tensorflow as tf
+import tensorflow as tf
 
 from capslayer.data.datasets.cifar100.writer import tfrecord_runner
 
@@ -37,10 +33,10 @@ from capslayer.data.datasets.cifar100.writer import tfrecord_runner
 def parse_fun(serialized_example):
     """ Data parsing function.
     """
-    features = tf.parse_single_example(serialized_example,
-                                       features={'image': tf.FixedLenFeature([], tf.string),
-                                                 'label': tf.FixedLenFeature([], tf.int64)})
-    image = tf.decode_raw(features['image'], tf.float32)
+    features = tf.io.parse_single_example(serialized_example,
+                                       features={'image': tf.io.FixedLenFeature([], tf.string),
+                                                 'label': tf.io.FixedLenFeature([], tf.int64)})
+    image = tf.io.decode_raw(features['image'], tf.float32)
     image = tf.reshape(image, shape=[32 * 32 * 3])
     image.set_shape([32 * 32 * 3])
     image = tf.cast(image, tf.float32) * (1. / 255)
@@ -57,11 +53,10 @@ class DataLoader(object):
                  splitting="TVT",
                  one_hot=False,
                  name="create_inputs"):
+
         if path is None or not os.path.exists(path):
             tfrecord_runner()
 
-        self.handle = tf.placeholder(tf.string, shape=[])
-        self.next_element = None
         self.path = path
         self.name = name
 
@@ -74,8 +69,10 @@ class DataLoader(object):
         with tf.name_scope(self.name):
             mode = mode.lower()
             modes = ["train", "test", "eval"]
-            filenames = [os.path.join(self.path, '%s_cifar100.tfrecord' % mode)]
+            if mode not in modes:
+                raise "mode not found! supported modes are " + modes
 
+            filenames = [os.path.join(self.path, '%s_cifar100.tfrecord' % mode)]
             dataset = tf.data.TFRecordDataset(filenames)
             dataset = dataset.map(parse_fun)
             dataset = dataset.batch(batch_size)
@@ -83,15 +80,9 @@ class DataLoader(object):
             if mode == "train":
                 dataset = dataset.shuffle(buffer_size=50000)
                 dataset = dataset.repeat()
-                iterator = dataset.make_one_shot_iterator()
             elif mode == "eval":
                 dataset = dataset.repeat(1)
-                iterator = dataset.make_initializable_iterator()
             elif mode == "test":
                 dataset = dataset.repeat(1)
-                iterator = dataset.make_one_shot_iterator()
 
-            if self.next_element is None:
-                self.next_element = tf.data.Iterator.from_string_handle(self.handle, iterator.output_types).get_next()
-
-            return(iterator)
+            return dataset

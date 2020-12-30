@@ -19,11 +19,7 @@ from __future__ import print_function
 
 import numpy as np
 import capslayer as cl
-try:
-    import tensorflow.compat.v1 as tf
-    tf.disable_v2_behavior()
-except:
-    import tensorflow as tf
+import tensorflow as tf
 
 
 def matmul(a, b,
@@ -123,6 +119,7 @@ def norm(tensor, ord='euclidean', axis=None, keepdims=None, name=None):
     try:
         return tf.norm(tensor, ord=ord, axis=axis, keepdims=keepdims, name=name)
     except:
+        # This is not needed anymore, as of TensorFlow 2.x
         return tf.norm(tensor, ord=ord, axis=axis, keep_dims=keepdims, name=name)
 
 
@@ -133,6 +130,7 @@ def reduce_sum(input_tensor,
     try:
         return tf.reduce_sum(input_tensor, axis=axis, keepdims=keepdims, name=name)
     except:
+        # This is not needed anymore, as of TensorFlow 2.x
         return tf.reduce_sum(input_tensor, axis=axis, keep_dims=keepdims, name=name)
 
 
@@ -160,9 +158,9 @@ def log(x, epsilon=1e-20, name=None):
         If epsilon is given as a positive float, x will be clipped to bigger than epsilon before doing computing.
     """
     if isinstance(epsilon, float) and epsilon > 0:
-        return tf.log(tf.maximum(x, epsilon), name=name)
+        return tf.math.log(tf.maximum(x, epsilon), name=name)
     else:
-        return tf.log(x, name=name)
+        return tf.math.log(x, name=name)
 
 
 if __name__ == "__main__":
@@ -171,8 +169,11 @@ if __name__ == "__main__":
                     dtype=tf.float32)
     c1 = tf.matmul(a, b, transpose_a=True, transpose_b=True)
     c2 = matmul_v2(a, b, transpose_a=True, transpose_b=True)
-    config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True
-    sess = tf.Session(config=config)
-    print(sess.run(c1))
-    print(sess.run(c2))
+    # config = tf.ConfigProto()
+    # config.gpu_options.allow_growth = True
+    # sess = tf.Session(config=config)
+    # print(sess.run(c1))
+    # print(sess.run(c2))
+    print(c1)
+    print(c2)
+

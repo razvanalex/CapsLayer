@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+from capslayer import keras
 from capslayer import layers
 from capslayer import data
 from capslayer.ops import losses
@@ -19,6 +20,7 @@ from capslayer.ops.math_ops import log
 from capslayer.ops.ops import shape
 
 _allowed_symbols = [
+    'keras',
     'layers',
     'data',
     'distributions',
@@ -34,6 +36,6 @@ _allowed_symbols = [
     'shape'
 ]
 
-__version__ = "0.1.5"
+__version__ = "0.2.0"
 
 __all__ = [s for s in _allowed_symbols]

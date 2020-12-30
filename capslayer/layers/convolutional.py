@@ -18,11 +18,7 @@ from __future__ import division
 from __future__ import print_function
 
 import capslayer as cl
-try:
-    import tensorflow.compat.v1 as tf
-    tf.disable_v2_behavior()
-except:
-    import tensorflow as tf
+import tensorflow as tf
 
 from capslayer.core import routing
 from capslayer.core import transforming
@@ -60,7 +56,7 @@ def conv2d(inputs,
     """
 
     name = "conv2d" if name is None else name
-    with tf.variable_scope(name) as scope:
+    with tf.name_scope(name) as scope:
         if reuse:
             scope.reuse_variables()
 
@@ -189,7 +185,7 @@ def conv1d(inputs,
            filters,
            out_caps_dims,
            kernel_size,
-           stride,
+           strides,
            padding="valid",
            routing_method="EMRouting",
            routing_iter=3,
@@ -201,7 +197,7 @@ def conv1d(inputs,
         inputs: A 5-D tensor with shape [batch_size, in_width, in_channels] + in_caps_dims.
         activation: A 3-D tensor with shape [batch_size, in_width, in_channels].
         kernel_size: An integer or tuple/list of a single integer, specifying the length of the 1D convolution window.
-        stride: An integer or tuple/list of a single integer, specifying the stride length of the convolution.
+        strides: An integer or tuple/list of a single integer, specifying the stride length of the convolution.
         routing_iter: Number of iterations during routing algorithm.
 
     Returns:
@@ -211,7 +207,7 @@ def conv1d(inputs,
     """
 
     name = "conv1d" if name is None else name
-    with tf.variable_scope(name):
+    with tf.name_scope(name):
         input_shape = cl.shape(inputs)
         input_rank = len(input_shape)
         activation_rank = len(activation.shape)
@@ -227,12 +223,12 @@ def conv1d(inputs,
         else:
             raise ValueError('"kernel_size" should be an integer or tuple/list of 2 integers. Received:', str(kernel_size))
 
-        if isinstance(stride, int):
-            strides = [1, stride]
-        elif isinstance(stride, (list, tuple)) and len(stride) == 1:
-            strides = [1, stride[0]]
+        if isinstance(strides, int):
+            strides = [1, strides]
+        elif isinstance(strides, (list, tuple)) and len(strides) == 1:
+            strides = [1, strides[0]]
         else:
-            raise ValueError('"stride" should be an integer or tuple/list of a single integer. Received:', str(stride))
+            raise ValueError('"stride" should be an integer or tuple/list of a single integer. Received:', str(strides))
 
         if not isinstance(out_caps_dims, (list, tuple)) or len(out_caps_dims) != 2:
             raise ValueError('"out_caps_dims" should be a tuple/list of 2 integers. Received:', str(out_caps_dims))

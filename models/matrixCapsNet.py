@@ -19,11 +19,7 @@ from __future__ import print_function
 
 import numpy as np
 import capslayer as cl
-try:
-    import tensorflow.compat.v1 as tf
-    tf.disable_v2_behavior()
-except:
-    import tensorflow as tf
+import tensorflow as tf
 
 from config import cfg
 
@@ -56,13 +52,12 @@ class CapsNet(object):
         self.labels = labels
         probs = []
         inputs = tf.reshape(inputs, shape=[-1, self.height, self.width, self.channels])
-        conv1 = tf.layers.conv2d(inputs,
-                                 filters=32,
+        conv1 = tf.keras.layers.Conv2D(filters=32,
                                  kernel_size=5,
                                  strides=2,
                                  padding='VALID',
                                  activation=tf.nn.relu,
-                                 name="Conv1_layer")
+                                 name="Conv1_layer")(inputs)
 
         convCaps, activation = cl.layers.primaryCaps(conv1,
                                                      filters=32,
@@ -107,25 +102,24 @@ class CapsNet(object):
         # Decoder structure
         # Reconstructe the inputs with 3 FC layers
         # [batch_size, 1, 16, 1] => [batch_size, 16] => [batch_size, 512]
-        with tf.variable_scope('Decoder'):
+        with tf.name_scope('Decoder'):
             labels = tf.one_hot(self.labels, depth=self.num_label, axis=-1, dtype=tf.float32)
             self.labels_one_hoted = tf.reshape(labels, (-1, self.num_label, 1, 1))
             masked_caps = tf.multiply(self.poses, self.labels_one_hoted)
             num_inputs = np.prod(masked_caps.get_shape().as_list()[1:])
             active_caps = tf.reshape(masked_caps, shape=(-1, num_inputs))
-            fc1 = tf.layers.dense(active_caps, units=512, activation=tf.nn.relu)
-            fc2 = tf.layers.dense(fc1, units=1024, activation=tf.nn.relu)
+            fc1 = tf.keras.layers.Dense(units=512, activation=tf.nn.relu)(active_caps)
+            fc2 = tf.keras.layers.Dense(units=1024, activation=tf.nn.relu)(fc1)
             num_outputs = self.height * self.width * self.channels
-            self.recon_imgs = tf.layers.dense(fc2,
-                                              units=num_outputs,
-                                              activation=tf.sigmoid)
+            self.recon_imgs = tf.keras.layers.Dense(units=num_outputs,
+                                              activation=tf.sigmoid)(fc2)
             recon_imgs = tf.reshape(self.recon_imgs, shape=[-1, self.height, self.width, self.channels])
             cl.summary.image('reconstruction_img', recon_imgs, verbose=cfg.summary_verbose)
 
-        with tf.variable_scope('accuracy'):
+        with tf.name_scope('accuracy'):
             cl.summary.histogram('activation', tf.nn.softmax(self.probs, 1), verbose=cfg.summary_verbose)
-            logits_idx = tf.to_int32(tf.argmax(cl.softmax(self.probs, axis=1), axis=1))
-            correct_prediction = tf.equal(tf.to_int32(self.labels), logits_idx)
+            logits_idx = tf.cast(tf.argmax(cl.softmax(self.probs, axis=1), axis=1), tf.int32)
+            correct_prediction = tf.equal(tf.cast(self.labels, tf.int32), logits_idx)
             correct = tf.reduce_sum(tf.cast(correct_prediction, tf.float32))
             self.accuracy = tf.reduce_mean(correct / tf.cast(tf.shape(self.probs)[0], tf.float32))
             cl.summary.scalar('accuracy', self.accuracy, verbose=cfg.summary_verbose)
@@ -133,7 +127,7 @@ class CapsNet(object):
         return self.poses, self.probs
 
     def _loss(self):
-        with tf.variable_scope("loss"):
+        with tf.name_scope("loss"):
             # The reconstruction loss
             orgin = tf.reshape(self.raw_imgs, shape=(-1, self.height * self.width * self.channels))
             squared = tf.square(self.recon_imgs - orgin)
@@ -160,8 +154,8 @@ class CapsNet(object):
     def train(self, optimizer, num_gpus=1):
         self.global_step = tf.Variable(1, name='global_step', trainable=False)
         total_loss = self._loss()
-        optimizer = tf.train.AdamOptimizer()
+        optimizer = tf.keras.optimizers.Adam()
         train_ops = optimizer.minimize(total_loss, global_step=self.global_step)
-        summary_ops = tf.summary.merge_all()
+        summary_ops = tf.compat.v1.summary.merge_all()
 
         return(total_loss, train_ops, summary_ops)

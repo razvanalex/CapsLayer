@@ -18,11 +18,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-try:
-    import tensorflow.compat.v1 as tf
-    tf.disable_v2_behavior()
-except:
-    import tensorflow as tf
+import tensorflow as tf
 from capslayer.data.utils.download_utils import maybe_download_and_extract
 from capslayer.data.datasets.fashion_mnist.writer import tfrecord_runner
 
@@ -30,16 +26,16 @@ from capslayer.data.datasets.fashion_mnist.writer import tfrecord_runner
 def parse_fun(serialized_example):
     """ Data parsing function.
     """
-    features = tf.parse_single_example(serialized_example,
-                                       features={'image': tf.FixedLenFeature([], tf.string),
-                                                 'label': tf.FixedLenFeature([], tf.int64),
-                                                 'height': tf.FixedLenFeature([], tf.int64),
-                                                 'width': tf.FixedLenFeature([], tf.int64),
-                                                 'depth': tf.FixedLenFeature([], tf.int64)})
+    features = tf.io.parse_single_example(serialized_example,
+                                       features={'image': tf.io.FixedLenFeature([], tf.string),
+                                                 'label': tf.io.FixedLenFeature([], tf.int64),
+                                                 'height': tf.io.FixedLenFeature([], tf.int64),
+                                                 'width': tf.io.FixedLenFeature([], tf.int64),
+                                                 'depth': tf.io.FixedLenFeature([], tf.int64)})
     height = tf.cast(features['height'], tf.int32)
     width = tf.cast(features['width'], tf.int32)
     depth = tf.cast(features['depth'], tf.int32)
-    image = tf.decode_raw(features['image'], tf.float32)
+    image = tf.io.decode_raw(features['image'], tf.float32)
     image = tf.reshape(image, shape=[height * width * depth])
     image.set_shape([28 * 28 * 1])
     image = tf.cast(image, tf.float32) * (1. / 255)
@@ -74,10 +70,10 @@ class DataLoader(object):
 
         # data downloaded and data extracted?
         maybe_download_and_extract("fashion-mnist", path)
+        
         # data tfrecorded?
         tfrecord_runner(path, force=False)
-        self.handle = tf.placeholder(tf.string, shape=[])
-        self.next_element = None
+
         self.path = path
         self.name = name
 
@@ -99,16 +95,10 @@ class DataLoader(object):
 
             if mode == "train":
                 dataset = dataset.shuffle(buffer_size=50000)
-                dataset = dataset.repeat()
-                iterator = dataset.make_one_shot_iterator()
+                dataset = dataset.repeat(1)
             elif mode == "eval":
                 dataset = dataset.repeat(1)
-                iterator = dataset.make_initializable_iterator()
             elif mode == "test":
                 dataset = dataset.repeat(1)
-                iterator = dataset.make_one_shot_iterator()
 
-            if self.next_element is None:
-                self.next_element = tf.data.Iterator.from_string_handle(self.handle, iterator.output_types).get_next()
-
-            return(iterator)
+            return dataset

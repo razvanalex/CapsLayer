@@ -23,11 +23,7 @@ from __future__ import print_function
 
 import numpy as np
 import capslayer as cl
-try:
-    import tensorflow.compat.v1 as tf
-    tf.disable_v2_behavior()
-except:
-    import tensorflow as tf
+import tensorflow as tf
 
 from capslayer.core import routing
 from capslayer.core import transforming
@@ -55,7 +51,7 @@ def dense(inputs, activation,
         activation: [batch_size, num_outputs]
     """
     name = "dense" if name is None else name
-    with tf.variable_scope(name) as scope:
+    with tf.name_scope(name) as scope:
         if reuse:
             scope.reuse()
         if coordinate_addition and len(inputs.shape) == 6 and len(activation.shape) == 4:
@@ -119,12 +115,12 @@ def primaryCaps(inputs, filters,
     '''
 
     name = "primary_capsule" if name is None else name
-    with tf.variable_scope(name):
+    with tf.name_scope(name):
         channels = filters * np.prod(out_caps_dims)
         channels = channels + filters if method == "logistic" else channels
-        pose = tf.layers.conv2d(inputs, channels,
-                                kernel_size=kernel_size,
-                                strides=strides, activation=None)
+        pose = tf.keras.layers.Conv2D(channels,
+                                      kernel_size=kernel_size,
+                                      strides=strides, activation=None)(inputs)
         shape = cl.shape(pose, name="get_pose_shape")
         batch_size = shape[0]
         height = shape[1]
@@ -143,4 +139,4 @@ def primaryCaps(inputs, filters,
             activation = cl.norm(pose, axis=(-2, -1))
         activation = tf.clip_by_value(activation, 1e-20, 1. - 1e-20)
 
-        return(pose, activation)
+        return (pose, activation)

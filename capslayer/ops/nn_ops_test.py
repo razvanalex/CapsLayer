@@ -18,11 +18,7 @@ from __future__ import division
 from __future__ import print_function
 
 import numpy as np
-try:
-    import tensorflow.compat.v1 as tf
-    tf.disable_v2_behavior()
-except:
-    import tensorflow as tf
+import tensorflow as tf
 
 from nn_ops import space_to_batch_nd_v1
 from nn_ops import space_to_batch_nd
@@ -48,14 +44,14 @@ if __name__ == "__main__":
     transfered = testSpaceToBatch()
     transfered_v1 = testSpaceToBatch_v1()
     out = testBatchToSpace(tf.reduce_mean(transfered, axis=-1))
-    config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True
-    sess = tf.Session()
-    out1 = sess.run(transfered)
-    out2 = sess.run(transfered_v1)
+    # config = tf.ConfigProto()
+    # config.gpu_options.allow_growth = True
+    # sess = tf.Session()
+    # out1 = sess.run(transfered)
+    # out2 = sess.run(transfered_v1)
     # out2 = sess.run(out)
-    print(out1[2, :])
-    print(out1[2, :])
+    print(transfered[2, :])
+    print(transfered[2, :])
     # print(out1[1, 18:])
     # print(out2[0])
     # print(np.mean(out1[1]))

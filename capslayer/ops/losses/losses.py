@@ -18,11 +18,7 @@ from __future__ import division
 from __future__ import print_function
 
 import capslayer as cl
-try:
-    import tensorflow.compat.v1 as tf
-    tf.disable_v2_behavior()
-except:
-    import tensorflow as tf
+import tensorflow as tf
 
 
 def spread_loss(labels, logits, margin, regularizer=None):
@@ -41,7 +37,6 @@ def spread_loss(labels, logits, margin, regularizer=None):
     dist = tf.pow(tf.maximum(0., dist), 2)
     loss = tf.reduce_mean(tf.reduce_sum(dist, axis=-1))
     if regularizer is not None:
-        regularizer = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
         loss += tf.reduce_mean(regularizer)
     return(loss)
 
@@ -73,9 +68,8 @@ def cross_entropy(labels, logits, regularizer=None):
     Returns:
         ...
     '''
-    loss = tf.losses.sparse_softmax_cross_entropy(labels, logits)
+    loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels, logits)
     if regularizer is not None:
-        regularizer = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
         loss += tf.reduce_mean(regularizer)
     return(loss)
 

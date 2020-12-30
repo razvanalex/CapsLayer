@@ -19,11 +19,7 @@ from __future__ import print_function
 
 import os
 import numpy as np
-try:
-    import tensorflow.compat.v1 as tf
-    tf.disable_v2_behavior()
-except:
-    import tensorflow as tf
+import tensorflow as tf
 
 from capslayer.data.utils.TFRecordHelper import int64_feature, bytes_feature
 
@@ -57,7 +53,7 @@ def load_mnist(path, split):
 
 
 def encode_and_write(dataset, filename):
-    with tf.python_io.TFRecordWriter(filename) as writer:
+    with tf.io.TFRecordWriter(filename) as writer:
         for image, label in dataset:
             image_raw = image.tostring()
             example = tf.train.Example(features=tf.train.Features(

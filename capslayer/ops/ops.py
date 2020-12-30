@@ -18,11 +18,7 @@ from __future__ import division
 from __future__ import print_function
 
 import capslayer as cl
-try:
-    import tensorflow.compat.v1 as tf
-    tf.disable_v2_behavior()
-except:
-    import tensorflow as tf
+import tensorflow as tf
 
 
 def squash(inputs, axis=-2, ord="euclidean", name=None):
