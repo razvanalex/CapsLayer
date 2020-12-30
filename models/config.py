@@ -18,7 +18,7 @@ flags.DEFINE_float('lambda_val', 0.5, 'down weight of the loss for absent digit 
 
 # for training
 flags.DEFINE_integer('batch_size', 64, 'batch size')
-flags.DEFINE_integer('num_steps', 6, 'The number of training steps, default: 50,000')
+flags.DEFINE_integer('num_epochs', 6, 'The number of training epochs, default: 6')
 flags.DEFINE_integer('iter_routing', 3, 'number of iterations in routing algorithm')
 flags.DEFINE_integer('train_sum_every', 1, 'the frequency of saving train summary(step)')
 flags.DEFINE_integer('val_sum_every', 3, 'the frequency of saving valuation summary(step)')

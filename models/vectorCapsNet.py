@@ -80,7 +80,7 @@ class CapsNet(tf.keras.Model):
         num_inputs = np.prod(cl.shape(x)[1:4])
         x = tf.reshape(x, shape=[-1, num_inputs, 8, 1])
         activation = tf.reshape(activation, shape=[-1, num_inputs])
-        poses, probs = self.denseCaps(x, activation)
+        poses, probs = self.denseCaps((x, activation))
 
         cl.summary.histogram('activation', probs, verbose=cfg.summary_verbose)
 
@@ -158,7 +158,7 @@ class CapsNet(tf.keras.Model):
 
         return total_loss
 
-    def train_step(self, inputs, labels):
+    def train_step(self, inputs, labels, global_step=None):
         optimizer = tf.keras.optimizers.Adam()
 
         with tf.GradientTape() as tape:
@@ -183,5 +183,5 @@ class CapsNet(tf.keras.Model):
 
         return probs, logits_idx, self.accuracy(probs, labels)
 
-    def call(self, inputs, labels):
-        return self.train_step(inputs, labels)
+    def call(self, inputs, labels, global_step=None):
+        return self.train_step(inputs, labels, global_step)

@@ -94,7 +94,8 @@ class CapsuleConv1D(tf.keras.layers.Layer):
                                     routing_method=routing_method,
                                     routing_iter=routing_iter)
 
-    def build(self, input_shape, activation_shape):
+    def build(self, input_shape):
+        input_shape, activation_shape = input_shape
         input_rank = len(input_shape)
         activation_rank = len(activation_shape)
         if input_rank != 5:
@@ -129,7 +130,8 @@ class CapsuleConv1D(tf.keras.layers.Layer):
         super(CapsuleConv1D, self).build(input_shape)
 
     @tf.function
-    def call(self, inputs, activation):
+    def call(self, inputs):
+        inputs, activation = inputs
         inputs = tf.expand_dims(inputs, axis=1)
         activation = tf.expand_dims(activation, axis=1)
         pose, activation = self.conv2d(inputs, activation)
@@ -155,7 +157,8 @@ class CapsuleConv2D(tf.keras.layers.Layer):
         self.transforming = Transforming(filters, out_caps_dims)
         self.routing = Routing(routing_method, routing_iter)
 
-    def build(self, input_shape, activation_shape):
+    def build(self, input_shape):
+        input_shape, activation_shape = input_shape
         input_rank = len(input_shape)
         activation_rank = len(activation_shape)
         if not input_rank == 6:
@@ -189,15 +192,12 @@ class CapsuleConv2D(tf.keras.layers.Layer):
         elif isinstance(self.out_caps_dims, tuple):
             self.out_caps_dims = list(self.out_caps_dims)
 
-        self.transforming.build(input_shape)
-
-        # vote_shape = input_shape[:-3] + [self.num_outputs] + self.out_caps_dims
-        # self.routing.build(vote_shape)
-
         super(CapsuleConv2D, self).build(input_shape)
 
     @tf.function
-    def call(self, inputs, activation):
+    def call(self, inputs):
+        inputs, activation = inputs
+
         # 1. space to batch
         # patching everything into [batch_size, out_height, out_width, in_channels] + in_caps_dims (batched)
         # and [batch_size, out_height, out_width, in_channels] (activation).
@@ -231,7 +231,8 @@ class CapsuleConv3D(tf.keras.layers.Layer):
         self.transforming = Transforming(filters, out_caps_dims)
         self.routing = Routing(routing_method, routing_iter)
 
-    def build(self, input_shape, activation_shape):
+    def build(self, input_shape):
+        input_shape, activation_shape = input_shape
         input_rank = len(input_shape)
         activation_rank = len(activation_shape)
         if input_rank != 7:
@@ -264,15 +265,12 @@ class CapsuleConv3D(tf.keras.layers.Layer):
         elif isinstance(self.out_caps_dims, tuple):
             self.out_caps_dims = list(self.out_caps_dims)
 
-        self.transforming.build(input_shape)
-
-        # vote_shape = input_shape[:-3] + [self.num_outputs] + self.out_caps_dims
-        # self.routing.build(vote_shape)
-
         super(CapsuleConv3D, self).build(input_shape)
 
     @tf.function
-    def call(self, inputs, activation):
+    def call(self, inputs):
+        inputs, activation = inputs
+    
         # 1. space to batch
         batched = cl.space_to_batch_nd(inputs, self.kernel_size, self.strides)
         activation = cl.space_to_batch_nd(activation,
@@ -303,15 +301,18 @@ class CapsuleDense(tf.keras.layers.Layer):
         self.routing = Routing(routing_method, routing_iter)
 
     def build(self, input_shape):
-        self.transforming.build(input_shape)
+        # input_shape, activation_shape = input_shape
+        # self.transforming.build(input_shape)
 
-        vote_shape = input_shape[:-3] + [self.num_outputs] + self.out_caps_dims
-        self.routing.build(vote_shape)
+        # vote_shape = input_shape[:-3] + [self.num_outputs] + self.out_caps_dims
+        # self.routing.build(vote_shape)
 
         super(CapsuleDense, self).build(input_shape)
 
     @tf.function
-    def call(self, inputs, activation):
+    def call(self, inputs):
+        inputs, activation = inputs
+
         if self.coordinate_addition and len(inputs.shape) == 6 and len(activation.shape) == 4:
             vote = self.transforming(inputs)
 

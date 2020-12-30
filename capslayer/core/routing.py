@@ -56,7 +56,7 @@ def routing(votes,
         elif method == 'DynamicRouting':
             if not votes.shape[-1].value == 1:
                 raise ValueError(
-                    '"DynamicRouting" method only works for vetocr, please set the "out_caps_dims" like [n, 1]')
+                    '"DynamicRouting" method only works for vectors, please set the "out_caps_dims" like [n, 1]')
             pose, activation = dynamicRouting(votes, num_iter, leaky=True)
             # pose, activation = dynamicRouting_v1(votes, num_iter, leaky=True)
         else:
@@ -472,7 +472,7 @@ class Routing(tf.keras.layers.Layer):
         elif self.method == 'DynamicRouting':
             if not votes.shape[-1] == 1:
                 raise ValueError(
-                    '"DynamicRouting" method only works for vetocr, please set the "out_caps_dims" like [n, 1]')
+                    '"DynamicRouting" method only works for vectors, please set the "out_caps_dims" like [n, 1]')
             pose, activation = self.dynamicRouting(votes)
         else:
             raise Exception('Invalid routing method!', self.method)

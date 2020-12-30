@@ -23,9 +23,11 @@ import numpy as np
 import tensorflow as tf
 from importlib import import_module
 
-from capslayer.plotlib import plot_activation
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from config import cfg
+from capslayer.plotlib import plot_activation
 
 
 def save_to(is_training):
@@ -66,7 +68,7 @@ def save_to(is_training):
 
 def train(model, data_loader):
     checkpoint_path = os.path.join(cfg.logdir, 'model_-{epoch:04d}.ckpt')
-    
+
     # Setting up the dataloader
     training_iterator = data_loader(cfg.batch_size, mode="train")
     validation_iterator = data_loader(cfg.batch_size, mode="eval")
@@ -78,44 +80,45 @@ def train(model, data_loader):
 
     # Compute the cardinality of the dataset
     train_ds_len = 0
-    init = False
-    for data in training_iterator: 
+    for data in training_iterator:
         train_ds_len = train_ds_len + 1
-        if not init:
-            init = True
-            model(data['images'], data['labels'])
-    
+
     val_ds_len = 0
-    for _ in validation_iterator: 
+    for _ in validation_iterator:
         val_ds_len = val_ds_len + 1
 
+    # Init the model and show the summary
+    data = next(iter(training_iterator))
+    model(data['images'], data['labels'], 1)
     print(model.summary())
 
     # Train the model
     with summary_writer.as_default():
         loss_val_avg = []
         train_acc_avg = []
-        for step in range(1, cfg.num_steps):
+        for step in range(1, cfg.num_epochs):
             start_time = time.time()
-            
+
             # Initialize progress bars
             progbar_train = tf.keras.utils.Progbar(train_ds_len)
             progbar_val = tf.keras.utils.Progbar(val_ds_len)
 
             tf.summary.experimental.set_step(step)
-            
+
             # Train
             loss_val_step = []
             train_acc_step = []
             for b_id, data in enumerate(training_iterator):
-                loss_val, train_acc, _ = model(data['images'], data['labels'])
+                loss_val, train_acc, _ = model(data['images'], data['labels'],
+                                               (step - 1) * train_ds_len + b_id)
                 loss_val_step.append(loss_val)
                 train_acc_step.append(train_acc)
-                progbar_train.update(b_id + 1, values=[('loss', loss_val), ('accuracy', train_acc)])
+                progbar_train.update(
+                    b_id + 1, values=[('loss', loss_val), ('accuracy', train_acc)])
 
             loss_val_avg.append(sum(loss_val_step) / len(loss_val_step))
             train_acc_avg.append(sum(train_acc_step) / len(train_acc_step))
-            
+
             loss_val = loss_val_avg[-1]
             train_acc = train_acc_avg[-1]
 
@@ -148,27 +151,27 @@ def train(model, data_loader):
                 plot_activation(np.hstack((probs, targets)), step=step, save_to=path)
                 fd["val_acc"].write("{:d},{:.4f}\n".format(step, avg_acc))
                 fd["val_acc"].flush()
-            
+
             if step % cfg.save_ckpt_every == 0:
                 model.save_weights(checkpoint_path.format(epoch=0))
 
             duration = time.time() - start_time
-            log_str = ' step: {:d}, loss: {:.3f}, accuracy: {:.3f}, time: {:.3f} sec/step' \
-                        .format(step, loss_val, train_acc, duration)
+            log_str = ' step: {:d}, loss: {:.3f}, accuracy: {:.3f}, time: {:.3f} sec/step'.format(step, loss_val, train_acc, duration)
             print(log_str)
+
 
 def evaluate(model, data_loader):
     # Setting up model
     test_iterator = data_loader(cfg.batch_size, mode="test")
-    
+
     # Create files to save evaluating results
     fd = save_to(is_training=False)
 
     # Compute the cardinality of the dataset
     ds_len = 0
-    for _ in test_iterator: 
+    for _ in test_iterator:
         ds_len = ds_len + 1
-    
+
     # Initialize progress bar
     progbar = tf.keras.utils.Progbar(ds_len)
 
@@ -226,7 +229,8 @@ def main():
         channels = 1
 
     # Initializing model and data loader
-    net = model(height=height, width=width, channels=channels, num_label=num_label)
+    net = model(height=height, width=width,
+                channels=channels, num_label=num_label)
     dataset = "capslayer.data.datasets." + cfg.dataset
     data_loader = import_module(dataset).DataLoader(path=cfg.data_dir,
                                                     splitting=cfg.splitting,
