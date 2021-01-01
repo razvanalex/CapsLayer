@@ -47,7 +47,6 @@ class PrimaryCapsule(tf.keras.layers.Layer):
     def build(self, input_shape):
         super(PrimaryCapsule, self).build(input_shape)
 
-    @tf.function
     def call(self, inputs):
         pose = self.conv2d(inputs)
         shape = cl.shape(pose, name="get_pose_shape")
@@ -129,7 +128,6 @@ class CapsuleConv1D(tf.keras.layers.Layer):
 
         super(CapsuleConv1D, self).build(input_shape)
 
-    @tf.function
     def call(self, inputs):
         inputs, activation = inputs
         inputs = tf.expand_dims(inputs, axis=1)
@@ -194,7 +192,6 @@ class CapsuleConv2D(tf.keras.layers.Layer):
 
         super(CapsuleConv2D, self).build(input_shape)
 
-    @tf.function
     def call(self, inputs):
         inputs, activation = inputs
 
@@ -267,7 +264,6 @@ class CapsuleConv3D(tf.keras.layers.Layer):
 
         super(CapsuleConv3D, self).build(input_shape)
 
-    @tf.function
     def call(self, inputs):
         inputs, activation = inputs
     
@@ -309,7 +305,6 @@ class CapsuleDense(tf.keras.layers.Layer):
 
         super(CapsuleDense, self).build(input_shape)
 
-    @tf.function
     def call(self, inputs):
         inputs, activation = inputs
 

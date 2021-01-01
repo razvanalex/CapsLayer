@@ -322,7 +322,6 @@ class Routing(tf.keras.layers.Layer):
 
         super(Routing, self).build(vote_shape)
 
-    @tf.function
     def dynamicRouting(self, votes):
         """ Dynamic routing algorithm.
 
@@ -379,7 +378,6 @@ class Routing(tf.keras.layers.Layer):
 
         return poses, probs
 
-    @tf.function
     def M_step(self, log_R, log_activation, vote, lambda_val=0.01):
         log_R = log_R + log_activation
 
@@ -398,7 +396,6 @@ class Routing(tf.keras.layers.Layer):
 
         return(pose, log_var, log_activation)
 
-    @tf.function
     def E_step(self, pose, log_var, log_activation, vote):
         normalized_vote = cl.divide(
             tf.square(vote - pose), 2 * tf.exp(log_var))
@@ -410,7 +407,6 @@ class Routing(tf.keras.layers.Layer):
             tf.reduce_logsumexp(log_activation_logit, axis=-2, keepdims=True)
         return log_R
 
-    @tf.function
     def EMRouting(self, votes, activation):
         """
         Args:
@@ -456,7 +452,6 @@ class Routing(tf.keras.layers.Layer):
                                 shape=vote_shape[:-4] + [num_outputs])
         return pose, activation
 
-    @tf.function
     def call(self, votes, activation=None):
         vote_rank = len(votes.shape)
         activation_rank = len(activation.shape)
